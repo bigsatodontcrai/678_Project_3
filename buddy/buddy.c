@@ -51,6 +51,7 @@
 typedef struct {
 	struct list_head list;
 	/* TODO: DECLARE NECESSARY MEMBER VARIABLES */
+	int free;
 } page_t;
 
 /**************************************************************************
@@ -68,7 +69,43 @@ page_t g_pages[(1<<MAX_ORDER)/PAGE_SIZE];
 /**************************************************************************
  * Public Function Prototypes
  **************************************************************************/
+void *split(int size, int i){
+	if(size == PAGE_SIZE){
+		return NULL;
+	}
+	
+		if(list_empty(&free_area[i]) == 0){
+			list_move(&free_area[i], &free_area[i-1]);
+			int offset = 0;//the offset is necessary for if we're breaking apart something that doesn't start at 0
+			//the offset will be something we need to figure out but for now we'll just set it 0
+			int addr1 = (1 << (i - 1)) - 1 + offset;//the index of its physical address e.g. for i = 13, we would get 4 KB then - 1 and let's say offset = 0 we convert to page address which would be 1
+			int addr2 = addr1 - (1 << (i - 1));//address of the base of the piece we're breaking
+			int p_addr1 = ADDR_TO_PAGE(addr1); //gets the page address for the break point of the list
+			int p_addr2 = ADDR_TO_PAGE(addr2);
+			if(addr1 + 1 - offset == size){
+				g_pages[p_addr2].free = 0;
+				struct list_head *track = &g_pages[p_addr1]; //hold the reference to the second half of the split
+				move(track, &free_area[i-1]);//links this to the head of this index
+				return &g_pages[p_addr2];//returns the list
+			} else {
+				return split(size/2, i-1);
+			}
+			
+		}
+	
+}
 
+void merge(void *addr){
+
+}
+
+int find(int index){
+	if(list_empty(&free_area[index]) == 0){
+		return 0;
+	} else {
+		return 1;
+	}
+}
 /**************************************************************************
  * Local Functions
  **************************************************************************/
@@ -86,6 +123,7 @@ void buddy_init()
 		if(i != 0){
 			list_add(&g_pages[i].list, &g_pages[i-1].list);
 		}
+		g_pages[i].free = 1;
 	}
 
 	/* initialize freelist */
@@ -114,6 +152,20 @@ void buddy_init()
 void *buddy_alloc(int size)
 {
 	/* TODO: IMPLEMENT THIS FUNCTION */
+	for(int i = 12; i < 21; i++){
+		int num = 1 << i;
+		if(size < num){
+			int index = find(i);
+			if(index == 1){
+				//find the page address to set this to not free
+				//break off the correct size piece from memory
+			} else {
+				return split(num, i);
+			}
+		}
+
+	}
+
 	return NULL;
 }
 
