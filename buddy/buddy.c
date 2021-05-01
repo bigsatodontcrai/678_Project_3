@@ -51,6 +51,8 @@
 typedef struct {
 	struct list_head list;
 	/* TODO: DECLARE NECESSARY MEMBER VARIABLES */
+	int startaddr;
+	int free;
 } page_t;
 
 /**************************************************************************
@@ -68,7 +70,65 @@ page_t g_pages[(1<<MAX_ORDER)/PAGE_SIZE];
 /**************************************************************************
  * Public Function Prototypes
  **************************************************************************/
+void *split(int size, int index){
+	if(size == PAGE_SIZE){
+		return NULL;
+	}
+	for(int i = 13; i < 21; i++){
+		if (list_empty(&free_area[i]) == 0)
+		{
+			printf("big index: %d\n", index);
+			printf("Index: %d\n", i);
+			page_t *ptr = list_entry(free_area[i].next, page_t, list); //gets the base address of the first list
+			int offset = ptr->startaddr;								  //the offset is necessary for if we're breaking apart something that doesn't start at 0
+			int addr2 = offset;											  //address of the base of the piece we're breaking
+			printf("Start addr: %d\n", addr2);
+			int addr1 = (1 << (i - 1)) + PAGE_SIZE * offset; //the index of its physical address e.g. for i = 13, we would get 4 KB then - 1 and let's say offset = 0 we convert to page address which would be 1
 
+			int p_addr1 = addr1 / PAGE_SIZE - 1; //gets the page address for the break point of the list
+			int p_addr2 = addr2;
+
+			//struct list_head *track = &g_pages[p_addr1].list; //hold the reference to the second half of the split
+			printf("address: %d, other: %d\n", p_addr1, p_addr2);
+
+			if (i == index + 1)
+			{
+				g_pages[p_addr2].free = 0;
+				
+				list_add(&g_pages[p_addr1].list, &free_area[i - 1]); //add this to the list head
+				//list_add(&g_pages[p_addr1].list, &free_area[i]);
+				printf("made it here, %d\n", g_pages[p_addr2].startaddr);
+
+				return &g_pages[p_addr2];							  //returns the list
+			}
+			else
+			{
+				
+				page_t *ptr2 = list_entry(free_area[i].next, page_t, list);
+				printf("ln 102: start addr: %d\n", ptr2 -> startaddr);
+				//list_move((free_area[i].next), &free_area[i - 1]);
+				list_move(&free_area[i], &free_area[i - 2]);
+				list_move(&g_pages[p_addr1].list, free_area[i - 1].next);
+				return split(size, index);
+			}
+		}
+	}
+	
+	return NULL;
+	
+}
+
+void merge(void *addr){
+
+}
+
+int find(int index){
+	if(list_empty(&free_area[index]) == 0){
+		return 0;
+	} else {
+		return 1;
+	}
+}
 /**************************************************************************
  * Local Functions
  **************************************************************************/
@@ -82,16 +142,39 @@ void buddy_init()
 	int n_pages = (1<<MAX_ORDER) / PAGE_SIZE;
 	for (i = 0; i < n_pages; i++) {
 		/* TODO: INITIALIZE PAGE STRUCTURES */
-		//init g_pages[]
+		g_pages[i].startaddr = i;
+		g_pages[i].free = 1;
+		
+		INIT_LIST_HEAD(&g_pages[i].list);
+		//list_add(&g_pages[i].list, &g_pages[0].list);
+
 	}
+	
 
 	/* initialize freelist */
 	for (i = MIN_ORDER; i <= MAX_ORDER; i++) {
 		INIT_LIST_HEAD(&free_area[i]);
 	}
+	//struct list_head *position;
+
+	
 
 	/* add the entire memory as a freeblock */
 	list_add(&g_pages[0].list, &free_area[MAX_ORDER]);
+
+	for (i = 0; i < n_pages; i++)
+	{
+		list_add(&g_pages[i].list, &g_pages[0].list);
+	}
+	//printf("Address of free area next vs address of g pages, %p, %p\n", free_area[MAX_ORDER].next, &g_pages[0].list);
+
+	// list_for_each(position, free_area[MAX_ORDER].next)
+	// {
+	// 	page_t *tempptr = list_entry(position, page_t, list);
+	// 	printf("Address: %d\n", tempptr->startaddr);
+	// 	printf("%p self %p ting %p bink\n", position, position->prev, position->next);
+	// }
+	
 }
 
 /**
@@ -111,6 +194,39 @@ void buddy_init()
 void *buddy_alloc(int size)
 {
 	/* TODO: IMPLEMENT THIS FUNCTION */
+	for(int i = 12; i < 21; i++){
+		int num = 1 << i;
+		// printf("size: %d\n", size);
+		// printf("%d\n", num);
+		if(size < num){
+			int index = find(i);
+			if(index == 0){
+				//find the page address to set this to not free
+				//break off the correct size piece from memory
+
+				//printf("wrong place\n");
+				struct list_head *temporary = free_area[i].next;
+				list_move(free_area[i].next, &g_pages[0].list);
+				return temporary;
+			} else {
+				//printf("we in it: %d\n", i);
+				void* map = split(num, i);
+				// for(int i = 12; i < 21; i++){
+				// 	if(find(i) == 0){
+				// 		struct list_head *pointer;
+				// 		list_for_each(pointer, free_area[i].next){
+				// 			printf("pointer: %p\n", pointer);
+				// 		}
+				// 		printf("Yeet %d\n", i);
+				// 	}
+				// }
+				// printf("here?\n");
+				return map;
+			}
+		}
+
+	}
+
 	return NULL;
 }
 
