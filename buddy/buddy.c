@@ -21,8 +21,8 @@
 /**************************************************************************
  * Public Definitions
  **************************************************************************/
-#define MIN_ORDER 12
-#define MAX_ORDER 20
+#define MIN_ORDER 12 //min 4KB
+#define MAX_ORDER 20 //max 1024 KB
 
 #define PAGE_SIZE (1<<MIN_ORDER)
 /* page index to address */
@@ -57,7 +57,7 @@ typedef struct {
  * Global Variables
  **************************************************************************/
 /* free lists*/
-struct list_head free_area[MAX_ORDER+1];
+struct list_head free_area[MAX_ORDER+1]; //free list
 
 /* memory area */
 char g_memory[1<<MAX_ORDER];
@@ -82,6 +82,7 @@ void buddy_init()
 	int n_pages = (1<<MAX_ORDER) / PAGE_SIZE;
 	for (i = 0; i < n_pages; i++) {
 		/* TODO: INITIALIZE PAGE STRUCTURES */
+		//init g_pages[]
 	}
 
 	/* initialize freelist */
