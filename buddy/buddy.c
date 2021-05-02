@@ -52,6 +52,7 @@ typedef struct {
 	struct list_head list;
 	/* TODO: DECLARE NECESSARY MEMBER VARIABLES */
 	int startaddr;
+	int addr;
 	int free;
 } page_t;
 
@@ -80,13 +81,15 @@ void *split(int size, int index){
 			printf("big index: %d\n", index);
 			printf("Index: %d\n", i);
 			page_t *ptr = list_entry(free_area[i].next, page_t, list); //gets the base address of the first list
-			int offset = ptr->startaddr;								  //the offset is necessary for if we're breaking apart something that doesn't start at 0
+			int offset = ptr->startaddr;	
+			int addr = ptr ->addr;							  //the offset is necessary for if we're breaking apart something that doesn't start at 0
 			int addr2 = offset;											  //address of the base of the piece we're breaking
 			printf("Start addr: %d\n", addr2);
-			int addr1 = (1 << (i - 1)) + PAGE_SIZE * offset; //the index of its physical address e.g. for i = 13, we would get 4 KB then - 1 and let's say offset = 0 we convert to page address which would be 1
-
-			int p_addr1 = addr1 / PAGE_SIZE - 1; //gets the page address for the break point of the list
-			int p_addr2 = addr2;
+			int addr1 = BUDDY_ADDR(addr, i - 1);
+			printf("buddy find: %d\n", addr1);
+			 //gets the page address for the break point of the list
+			int p_addr1 = ADDR_TO_PAGE(addr1);
+			int p_addr2 = offset;
 
 			//struct list_head *track = &g_pages[p_addr1].list; //hold the reference to the second half of the split
 			printf("address: %d, other: %d\n", p_addr1, p_addr2);
@@ -143,7 +146,10 @@ void buddy_init()
 	for (i = 0; i < n_pages; i++) {
 		/* TODO: INITIALIZE PAGE STRUCTURES */
 		g_pages[i].startaddr = i;
+		g_pages[i].addr = PAGE_TO_ADDR(i);
 		g_pages[i].free = 1;
+		printf("Addr: %d\n", g_pages[i].addr);
+		
 		
 		INIT_LIST_HEAD(&g_pages[i].list);
 		//list_add(&g_pages[i].list, &g_pages[0].list);
