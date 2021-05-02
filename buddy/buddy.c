@@ -52,7 +52,7 @@ typedef struct {
 	struct list_head list;
 	/* TODO: DECLARE NECESSARY MEMBER VARIABLES */
 	int startaddr;
-	int addr;
+	void* addr;
 	int free;
 	int free_index;
 } page_t;
@@ -83,7 +83,7 @@ int buddy(void *addr, int o){
 	int p_addr1 = (int)((void*)addr1 - (void*)g_memory);
 	
 	p_addr1 = p_addr1/PAGE_SIZE;
-	p_addr1 = num + ((1<<o)/PAGE_SIZE);
+	//p_addr1 = num + ((1<<o)/PAGE_SIZE);
 	//printf("addr: %d\n", p_addr1);
 	return p_addr1;
 
@@ -198,8 +198,8 @@ void merge(int page, int size){
 	int bud = buddy(g_pages[page].addr, size);
 	int lbud = leftbuddy(g_pages[page].addr, size);
 	
-	//printf("Page: %d, bud: %d, lbud: %d, size: %d\n", page, bud, lbud, size);
-	//printf("Buddy's free index: %d; buddy's free: %d\n\n", g_pages[bud].free_index, g_pages[bud].free);
+	printf("Page: %d, bud: %d, lbud: %d, size: %d\n", page, bud, lbud, size);
+	printf("Buddy's free index: %d; buddy's free: %d\n\n", g_pages[bud].free_index, g_pages[bud].free);
 	
 	// printf("\nInside urge\n\n");
 	//  printf("8's buddy %d\n", buddy(PAGE_TO_ADDR(8), size));
@@ -210,6 +210,7 @@ void merge(int page, int size){
 	
 	int yessir = 0;
 	int ham = g_pages[bud].free_index == size && g_pages[bud].free == 1;
+
 	int yam = 0;
 	if(lbud >= 0){
 		//printf("Left Buddy's free index: %d; left buddy's free: %d\n", g_pages[lbud].free_index, g_pages[lbud].free);
@@ -246,14 +247,7 @@ void merge(int page, int size){
 		// buddy_dump();
 		// printf("leaving...\n\n");
 		
-		if (yam == 1){
-			list_del_init(&g_pages[lbud].list);
-			list_del_init(&g_pages[page].list);
-			//list_add(&g_pages[lbud].list, &free_area[size]);
-			//g_pages[page].free_index = 0;
-			//g_pages[lbud].free_index++;
-			merge(lbud, size);
-		}
+		
 
 		list_del_init(&g_pages[page].list);
 		// printf("Inside line 223\n\n");
