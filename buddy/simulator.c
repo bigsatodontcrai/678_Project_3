@@ -147,7 +147,7 @@ static status_t parse_alloc(char* cmd)
 	}
 
 	var->in_use = true;
-
+	
 	return SUCCESS;
 }
 
