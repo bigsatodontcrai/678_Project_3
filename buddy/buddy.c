@@ -109,14 +109,9 @@ void *split(int size, int index){
 			int offset = ptr->startaddr;	
 			int addr = ptr ->addr;							  //the offset is necessary for if we're breaking apart something that doesn't start at 0
 			int addr2 = offset;											  //address of the base of the piece we're breaking
-			printf("Start addr: %d\n", addr2);
-			int addr1 = BUDDY_ADDR(addr, i - 1);
-			printf("buddy find: %d\n", addr1);
-			 //gets the page address for the break point of the list
-			int p_addr1 = (void*)addr1 - (void*)g_memory;
-			p_addr1 = p_addr1 >> MIN_ORDER;
-			int p_addr2 = offset;
-
+			int p_addr1 = buddy(addr, i-1);
+			int p_addr2 = (void*)addr - (void*)g_memory;
+			p_addr2 = p_addr2 >> MIN_ORDER;
 
 			//struct list_head *track = &g_pages[p_addr1].list; //hold the reference to the second half of the split
 			//printf("address: %d, other: %d\n", p_addr1, p_addr2);
@@ -201,8 +196,8 @@ void merge(int page, int size){
 	int bud = buddy(g_pages[page].addr, size);
 	int lbud = leftbuddy(g_pages[page].addr, size);
 	
-	printf("Page: %d, bud: %d, lbud: %d, size: %d\n", page, bud, lbud, size);
-	printf("Buddy's free index: %d; buddy's free: %d\n\n", g_pages[bud].free_index, g_pages[bud].free);
+	//printf("Page: %d, bud: %d, lbud: %d, size: %d\n", page, bud, lbud, size);
+	//printf("Buddy's free index: %d; buddy's free: %d\n\n", g_pages[bud].free_index, g_pages[bud].free);
 	
 	// printf("\nInside urge\n\n");
 	//  printf("8's buddy %d\n", buddy(PAGE_TO_ADDR(8), size));
