@@ -88,7 +88,8 @@ void *split(int size, int index){
 			int addr1 = BUDDY_ADDR(addr, i - 1);
 			printf("buddy find: %d\n", addr1);
 			 //gets the page address for the break point of the list
-			int p_addr1 = ADDR_TO_PAGE(addr1);
+			int p_addr1 = (void*)addr1 - (void*)g_memory;
+			p_addr1 = p_addr1 >> MIN_ORDER;
 			int p_addr2 = offset;
 
 			//struct list_head *track = &g_pages[p_addr1].list; //hold the reference to the second half of the split
