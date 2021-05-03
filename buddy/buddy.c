@@ -137,7 +137,7 @@ void *split(int size, int index){
 				ting -> free = 0;
 				
 				list_del_init(&free_area[i]);
-				// printf("IN SPLIT: Page: %d, bud: %d, size: %d\n", p_addr2, p_addr1, i);
+				//printf("IN SPLIT: Page: %d, bud: %d, size: %d\n", p_addr2, p_addr1, i);
 				ptr2 = list_entry(pos, page_t, list);
 				//pos = g_pages[p_addr1].list.next;
 
@@ -167,12 +167,16 @@ void *split(int size, int index){
 				
 				
 				
-				g_pages[p_addr1].free_index = i;
+				g_pages[p_addr1].free_index = i-1;
 				list_add(&g_pages[p_addr1].list, &free_area[i - 1]); //add this to the list head
 					
 					//list_add(&g_pages[p_addr2].list, &free_area[i-1]);
 				
-				g_pages[p_addr2].free_index = i;
+				g_pages[p_addr2].free_index = i-1;
+				if(i == 20){
+					g_pages[p_addr2].free_index = 19;
+					g_pages[p_addr1].free_index = 19;
+				}
 				list_add(&g_pages[p_addr2].list, &free_area[i - 1]);
 				if(i < 20){
 					list_add(pos, &free_area[i]);
@@ -196,29 +200,18 @@ void *split(int size, int index){
 */
 void merge(int page, int size){
 	int bud = buddy(g_pages[page].addr, size);
-	int lbud = leftbuddy(g_pages[page].addr, size);
 	
-	printf("Page: %d, bud: %d, lbud: %d, size: %d\n", page, bud, lbud, size);
-	printf("Buddy's free index: %d; buddy's free: %d\n\n", g_pages[bud].free_index, g_pages[bud].free);
+	
+	//	printf("Page: %d, bud: %d, size: %d\n", page, bud, size);
+	//	printf("Buddy's free index: %d; buddy's free: %d\n\n", g_pages[bud].free_index, g_pages[bud].free);
 	
 	// printf("\nInside urge\n\n");
 	//  printf("8's buddy %d\n", buddy(PAGE_TO_ADDR(8), size));
 	// buddy_dump();
 	//printf("leaving urge\n\n");
 	
+	int yessir = g_pages[bud].free_index == size && g_pages[bud].free == 1;
 	
-	
-	int yessir = 0;
-	int ham = g_pages[bud].free_index == size && g_pages[bud].free == 1;
-
-	int yam = 0;
-	if(lbud >= 0){
-		//printf("Left Buddy's free index: %d; left buddy's free: %d\n", g_pages[lbud].free_index, g_pages[lbud].free);
-		yam = g_pages[lbud].free_index == size && g_pages[lbud].free == 1;
-		
-	}
-	
-	yessir = ham || yam;
 	list_add(&g_pages[page].list, &free_area[size]);
 
 	// struct list_head * pos;
@@ -236,6 +229,11 @@ void merge(int page, int size){
 	// printf("\nInside purge\n\n");
 	// buddy_dump();
 	// printf("leaving purge\n\n");
+	if(bud < page){
+		int temp = bud;
+		bud = page;
+		page = temp;
+	}
 	if(yessir == 1 && size < 20){
 		
 		//printf("innit\n");
@@ -254,9 +252,8 @@ void merge(int page, int size){
 		// buddy_dump();
 		// printf("leaving...\n\n");
 
-		if (ham == 1){
-			list_del_init(&g_pages[bud].list);
-		}
+		list_del_init(&g_pages[bud].list);
+		
 		
 		
 		
