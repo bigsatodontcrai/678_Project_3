@@ -109,11 +109,14 @@ void *split(int size, int index){
 			int offset = ptr->startaddr;	
 			int addr = ptr ->addr;							  //the offset is necessary for if we're breaking apart something that doesn't start at 0
 			int addr2 = offset;											  //address of the base of the piece we're breaking
-			
-			int p_addr1 = buddy(addr, i-1);
-			//printf("page size %d\n", PAGE_SIZE);
-			int p_addr2 = (void *)addr - (void *)g_memory;
-			p_addr2 = p_addr2 >> MIN_ORDER;
+			printf("Start addr: %d\n", addr2);
+			int addr1 = BUDDY_ADDR(addr, i - 1);
+			printf("buddy find: %d\n", addr1);
+			 //gets the page address for the break point of the list
+			int p_addr1 = (void*)addr1 - (void*)g_memory;
+			p_addr1 = p_addr1 >> MIN_ORDER;
+			int p_addr2 = offset;
+
 
 			//struct list_head *track = &g_pages[p_addr1].list; //hold the reference to the second half of the split
 			//printf("address: %d, other: %d\n", p_addr1, p_addr2);
